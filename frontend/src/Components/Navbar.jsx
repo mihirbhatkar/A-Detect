@@ -28,7 +28,7 @@ const Navbar = () => {
 					className="btn btn-ghost normal-case text-xl font-bold"
 					to={"/"}
 				>
-					A-Detect
+					🧠A-Detect
 				</Link>
 			</div>
 			<div className="flex-none">
