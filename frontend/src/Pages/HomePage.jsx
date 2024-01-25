@@ -3,7 +3,10 @@ import { useSelector } from "react-redux";
 
 const HomePage = () => {
 	const { userInfo } = useSelector((state) => state.auth);
+
 	const [selectedFile, setSelectedFile] = useState(null);
+	const [prediction, setPrediction] = useState(null);
+
 	const fileInputRef = useRef(null);
 
 	const handleFileChange = (e) => {
@@ -15,9 +18,36 @@ const HomePage = () => {
 		e.preventDefault();
 		document.getElementById("mri").value = null;
 		setSelectedFile(null);
+		setPrediction(null);
 	};
 
-	const handleUpload = (e) => {};
+	const handleUpload = async (e) => {
+		e.preventDefault();
+
+		if (!selectedFile) {
+			console.log("Please select an image file");
+			return;
+		}
+
+		const formData = new FormData();
+		formData.append("image", selectedFile);
+
+		try {
+			const response = await fetch("http://localhost:8080/predict", {
+				method: "POST",
+				body: formData,
+			});
+
+			if (response.ok) {
+				const result = await response.json();
+				setPrediction(result.prediction);
+			} else {
+				console.error("Error:", response.statusText);
+			}
+		} catch (error) {
+			console.error("Error:", error.message);
+		}
+	};
 
 	return (
 		<div className="flex justify-center items-center flex-col min-h-[var(--min-page-height)] text-4xl font-bold">
@@ -67,6 +97,11 @@ const HomePage = () => {
 									</button>
 								</div>
 							</form>
+							{prediction && (
+								<p className="mt-8">
+									Detected Alzheimer's Type: {prediction}
+								</p>
+							)}
 						</div>
 					</>
 				) : (
