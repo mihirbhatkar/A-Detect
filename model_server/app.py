@@ -7,34 +7,29 @@ temp = pathlib.PosixPath
 pathlib.PosixPath = pathlib.WindowsPath
 
 app = Flask(__name__)
-CORS(app)  
+CORS(app)
 
 # Load the trained model
-learn = load_learner('alzh-fastai.pkl')
+learn = load_learner('resnet50.pkl')
 pathlib.PosixPath = temp
 
 @app.route('/predict', methods=['POST'])
 def predict():
-    # Check if the request has a file in 'image' key
     if 'image' not in request.files:
         return jsonify({'error': 'No image file provided'})
 
     image_file = request.files['image']
 
-    # Ensure the file has an allowed extension
-    # if not image_file or not allowed_file(image_file.filename):
-    #     return jsonify({'error': 'Invalid file format'})
-
-    # Perform inference on the received image
     img = PILImage.create(image_file)
-    prediction, _, _ = learn.predict(img)
+    prediction, idx, probs = learn.predict(img)
+    
+    class_probs = {learn.dls.vocab[i]: float(probs[i]) for i in range(len(probs))}
+    print(class_probs)
 
-    return jsonify({'prediction': str(prediction)})
-
-# def allowed_file(filename):
-#     # Define the allowed file extensions
-#     allowed_extensions = {'png', 'jpg', 'jpeg'}
-#     return '.' in filename and filename.rsplit('.', 1)[1].lower() in allowed_extensions
+    return jsonify({
+        'prediction': str(prediction),
+        'class_probabilities': class_probs
+    })
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8080)
